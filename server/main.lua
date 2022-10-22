@@ -135,7 +135,6 @@ end)
 
 RegisterNetEvent('hunterXhunter:setAmountOfMeat')
 AddEventHandler('hunterXhunter:setAmountOfMeat', function(animlaNetId, amount)
-    print(animlaNetId, amount )
     local animal = NetworkGetEntityFromNetworkId(animlaNetId)
     Entity(animal).state.amountOfMeatLeftToGive = amount
 end)
