@@ -146,9 +146,9 @@ lib.callback.register('hunterXhunter:getAmountOfMeat', function(source, animlaNe
 end)
 
 RegisterNetEvent('hunterXhunter:setAnimalCarried')
-AddEventHandler('hunterXhunter:setAnimalCarried', function(animlaNetId)
+AddEventHandler('hunterXhunter:setAnimalCarried', function(animlaNetId, status)
     local animal = NetworkGetEntityFromNetworkId(animlaNetId)
-    Entity(animal).state.carried = true
+    Entity(animal).state.carried = status
 end)
 
 RegisterNetEvent('hunterXhunter:setVehicleState')

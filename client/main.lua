@@ -98,13 +98,6 @@ local function loadanimdict(dictname)
 	end
 end
 
-local function copyAmountOfMeat(animal, clone)
-    local state = Entity(animal).state
-    local amountOfMeatLeftToGive = state.amountOfMeatLeftToGive
-    Entity(clone).state:set('amountOfMeatLeftToGive', amountOfMeatLeftToGive, true)
-end
-
-
 local function slaughter(data, amountOfMeatLeftToGive)
     local hasHorns=false
         
@@ -124,11 +117,12 @@ local function carry(data)
     local entity = data.entity
     local vehicleId = GetEntityAttachedTo(entity) -- block to set vehicle to empty
     local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(entity))
+    print("carry :", amountOfMeatLeftToGive )
     if vehicleId then
         TriggerServerEvent('hunterXhunter:setVehicleState', NetworkGetNetworkIdFromEntity(vehicleId), nil) --set vehicle empty
     end
     carriying = true
-    DetachEntity(entity, true, true)-- when attached do vehicle
+    DetachEntity(entity, true, true)-- when attached to vehicle
     local cords = GetEntityCoords(entity)
     local heading = GetEntityHeading(entity)
     local x, y, z = table.unpack(cords)
@@ -136,7 +130,7 @@ local function carry(data)
     lastEntity = clone
     TriggerServerEvent("hunterXhunter:removeOldEntity", NetworkGetNetworkIdFromEntity(entity)) -- delete old animal that freezes
     
-    TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(clone)) 
+    TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(clone), true) 
     TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(clone), amountOfMeatLeftToGive) --copy amount to clone
     
     SetEntityCoords(clone, x, y, z, false, false, true, false)
@@ -156,18 +150,9 @@ local function drop(data)
     lastEntity = nil
     carriying = false
     local entity = data.entity
-    local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(entity))
     DetachEntity(entity, true, true)
+    TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(entity), false)
     ClearPedSecondaryTask(PlayerPedId())
-    -- ClearPedSecondaryTask(entity) --todo add animation to animal
-    local cords = GetEntityCoords(entity)
-    local heading = GetEntityHeading(entity)
-    local x, y, z = table.unpack(cords)
-    local clone = ClonePed(entity, true, false, true)
-    DeleteEntity(entity)-- maybe remove the entity in server [[[[]]]] synced well here :O    
-    TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(clone), amountOfMeatLeftToGive)
-    SetEntityCoords(clone, x, y, z-0.63, false, false, true, false)
-    SetEntityHeading(clone, heading)
 end
 
 local function put_on_roof(data)
@@ -176,26 +161,20 @@ local function put_on_roof(data)
     -- end 
     local entity = data.entity
     local animalCoords = GetEntityCoords(entity)
-    local vehicleId, vehicleCoords = lib.getClosestVehicle(animalCoords, 4, true)
+    local vehicleId, vehicleCoords = lib.getClosestVehicle(animalCoords, 6, true)
     if vehicleId then
         local state = Entity(vehicleId).state
         local isVehicleFull = state.full
         if not isVehicleFull then 
             TriggerServerEvent('hunterXhunter:setVehicleState', NetworkGetNetworkIdFromEntity(vehicleId), true) --set vehicle full
+            TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(entity), false)
             lastEntity = nil
             carriying = false
             DetachEntity(entity, true, true)
             ClearPedSecondaryTask(PlayerPedId())
-            -- ClearPedSecondaryTask(entity) --TODO add animation to animal
-            local cords = GetEntityCoords(entity)
-            local heading = GetEntityHeading(entity)
-            local x, y, z = table.unpack(cords)
-            local clone = ClonePed(entity, true, false, true)
-            DeleteEntity(entity) -- maybe remove the entity in server \o/ synced well here :O
-            SetEntityCoords(clone, x, y, z, false, false, true, false)
-            SetEntityHeading(clone, heading)
-            AttachEntityToEntity(clone, vehicleId, 0, 0.0, -1.5, 2.40, 0.0, 0.5, 270.0, false, false, false, false, 2, true) -- z=0.63 is the shoulder but doesnt syncs still shit 
-            SetEntityCollision(clone, true, false) 
+            ClearPedSecondaryTask(entity) --TODO add animation to animal
+            AttachEntityToEntity(entity, vehicleId, 0, 0.0, -1.5, 2.40, 0.0, 0.5, 270.0, false, false, false, false, 2, true) -- z=0.63 is the shoulder but doesnt syncs still shit 
+            SetEntityCollision(entity, true, false) 
         else
             lib.notify({
                 id = 'vehicle_full',
@@ -232,10 +211,11 @@ local animalsOptions = {
         name = 'slaughter',
         onSelect = function (data)
             local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(data.entity))
+            print("found/read :", amountOfMeatLeftToGive )
             if not amountOfMeatLeftToGive then 
                 amountOfMeatLeftToGive = math.random(40,70)
                 TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(data.entity), amountOfMeatLeftToGive)
-                -- Entity(entity).state.amountOfMeatLeftToGive = amountOfMeatLeftToGive
+                print("first init :", amountOfMeatLeftToGive )
             end
             slaughter(data, amountOfMeatLeftToGive)
         end,
