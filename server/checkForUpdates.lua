@@ -1,0 +1,3 @@
+
+
+lib.versionCheck('daiguel/hunterXhunter')

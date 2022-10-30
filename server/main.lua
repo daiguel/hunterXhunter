@@ -1,5 +1,4 @@
 local ox_inventory = exports.ox_inventory
-local allowedAnim = Config.allowedAnimals
 
 local function canCarry(_source, itemName, amount)
     local amountToAdd = ox_inventory:CanCarryAmount(_source, itemName)
@@ -37,24 +36,15 @@ local function hasKnife(_source)
     return false
 end
 
-local function hasLicenses(identifier)
+local function hasLicenses(identifier, source)
     local hasLisence = false
     for _, license in pairs(Config.licensesNeededToHunt) do
         hasLisence = MySQL.scalar.await('SELECT * FROM user_licenses WHERE owner = ? and type = ?', { identifier, license})
         if not hasLisence then
-            TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = "you need "..license.." license"})
+            TriggerClientEvent('ox_lib:notify', source, { type = 'error', description = "you need "..license.." license"})
         end
     end
     return hasLisence
-end
-
-local function signalIllegalHunting(cords)
-    local xPlayers = ESX.GetExtendedPlayers("job", "police")
-	for _, xPlayer in pairs(xPlayers) do
-        TriggerClientEvent('hunterXhunter:drawOutlaw', xPlayer.source, cords)
-        TriggerClientEvent('ox_lib:notify', xPlayer.source, { type = 'error', description = "ILLEGAL HUNTING ACTIVITY LOOK MAP"})
-        Config.signal()
-    end
 end
 
 RegisterNetEvent('hunterXhunter:slaughter')
@@ -65,16 +55,8 @@ AddEventHandler('hunterXhunter:slaughter', function(animalNetId, entityType, has
     local cords = xPlayer.getCoords(true)
 
     local entity = NetworkGetEntityFromNetworkId(animalNetId)
-    local hasLisence = hasLicenses(identifier)
+    local hasLisence = hasLicenses(identifier, _source)
     local hasKnife = hasKnife(_source)
-    local inLegalHuntingZone = lib.callback.await('hunterXhunter:insideLegalZone', _source)
-    
-    if inLegalHuntingZone then 
-        print ("in Zone")
-    else
-        print("out zone")
-        signalIllegalHunting(cords)
-    end
     if hasLisence or Config.allowToHuntWithoutLicense then 
         if hasKnife or Config.allowToSlaughterWithoutKnif then 
             if DoesEntityExist(entity) then
@@ -94,7 +76,11 @@ AddEventHandler('hunterXhunter:slaughter', function(animalNetId, entityType, has
                     local amount = canCarry(_source, "meat", amountOfMeatLeftToGive)
                     if amount then
                         if lib.callback.await('hunterXhunter:showPrgressbar', _source, "collecting leather and meat", 4) then
-                            addNext = addItem(_source, "meat", amount)
+                            if amount > 0 then --this because adding 0 is shiting everything
+                                addNext = addItem(_source, "meat", amount)
+                            elseif amount == 0 then
+                                addNext = true
+                            end
                             if addNext then 
                                 amount = amountOfMeatLeftToGive - amount
                                 Entity(entity).state.amountOfMeatLeftToGive = amount
@@ -116,13 +102,18 @@ AddEventHandler('hunterXhunter:slaughter', function(animalNetId, entityType, has
             TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = "you can't go to hunt without knife :("})
         end
     else
-        TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = "you can't hunt without License"})
+        TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = "you can't slaughter without License"})
     end
 end)
 
 RegisterNetEvent('hunterXhunter:signalIllegalHunting')
-AddEventHandler('hunterXhunter:signalIllegalHunting', function(cords)
-    signalIllegalHunting(cords)
+AddEventHandler('hunterXhunter:signalIllegalHunting', function(coords)
+    local xPlayers = ESX.GetExtendedPlayers("job", "police")
+	for _, xPlayer in pairs(xPlayers) do
+        TriggerClientEvent('hunterXhunter:drawOutlaw', xPlayer.source, coords)
+        Config.outlaw.signalfunc(source, coords, xPlayer.source)
+    end
+    
 end)
 
 RegisterNetEvent('hunterXhunter:removeOldEntity')
@@ -141,8 +132,7 @@ end)
 
 lib.callback.register('hunterXhunter:getAmountOfMeat', function(source, animlaNetId)
     local animal = NetworkGetEntityFromNetworkId(animlaNetId)
-    local state = Entity(animal).state
-    return state.amountOfMeatLeftToGive
+    return Entity(animal).state.amountOfMeatLeftToGive
 end)
 
 RegisterNetEvent('hunterXhunter:setAnimalCarried')

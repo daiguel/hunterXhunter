@@ -1,15 +1,20 @@
 local allowedAnimals = {}
 local ox_target = exports.ox_target
 local insideLegalZone = false
-
+local canHuntOutSideLegalZone = Config.allowToHuntOutSideZone
 local carriying = false
 local lastEntity = nil
+local slaughterhouse = Config.slaughterhouse
+local insideSlaughterhouseZone = false 
+local outalwBlipSprite, outlawBlipColor, outlawBlipScale = Config.outlaw.blipSprite, Config.outlaw.blipColor, Config.outlaw.blipScale
+local outlawDrawBlipTimeout = Config.outlaw.drawBlipTimeout
 
-local function createBlip(coords, bigAreaColor, distance, blipSprite, blipColor, blipScale)
-    local blip = AddBlipForRadius(coords, distance) -- need to have .0
-    SetBlipColour(blip, bigAreaColor)
-    SetBlipAlpha(blip, 128)
-
+local function createBlip(coords, bigAreaColor, distance, blipSprite, blipColor, blipScale , type , text)
+    if type == "area" then
+        local blip = AddBlipForRadius(coords, distance) -- need to have .0
+        SetBlipColour(blip, bigAreaColor)
+        SetBlipAlpha(blip, 128)
+    end 
 
     local blip2 = AddBlipForCoord(coords)
     SetBlipSprite(blip2, blipSprite)
@@ -19,30 +24,51 @@ local function createBlip(coords, bigAreaColor, distance, blipSprite, blipColor,
 	SetBlipAsShortRange(blip2, true)
 
 	BeginTextCommandSetBlipName('STRING')
-	AddTextComponentSubstringPlayerName('legal hunting area')
+	AddTextComponentSubstringPlayerName(text)
 	EndTextCommandSetBlipName(blip2)
     return blip, blip2
 end
 
+local function setSlaughterHouse()
+
+    createBlip(slaughterhouse.coords, slaughterhouse.bigAreaColor, slaughterhouse.distance, slaughterhouse.blipSprite, slaughterhouse.blipColor, slaughterhouse.blipScale, "simple", "slaughterhouse")
+    
+    local slaughterHousePoint = lib.points.new(slaughterhouse.coords, slaughterhouse.distance, { name = 'slaughterhouse'})
+    local r, g, b = table.unpack(slaughterhouse.markerColor)
+    local slaughterRange = 5
+    local marker = Config.slaughterhouse.marker
+    
+    function slaughterHousePoint:nearby()
+		DrawMarker(marker, self.coords.x, self.coords.y, self.coords.z, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, r, g, b, 50, true, true, 2, nil, nil, false)
+		if (self.currentDistance <= slaughterRange)  then --activate deactivate slaughter 
+			insideSlaughterhouseZone = true 
+		end
+		if (self.currentDistance > slaughterRange) then 
+			insideSlaughterhouseZone = false 
+		end
+       
+    end
+end
+
 local function setHuntingZone(areas)
     for _, area in pairs(areas) do
-        createBlip(area.coords, area.bigAreaColor, area.distance, area.blipSprite, area.blipColor, area.blipScale)
+        createBlip(area.coords, area.bigAreaColor, area.distance, area.blipSprite, area.blipColor, area.blipScale, "area", 'legal hunting area')
         
-        local point = lib.points.new(area.coords, area.distance, { name = 'legal hunting area'})
+        local huntingPoint = lib.points.new(area.coords, area.distance, { name = 'legal hunting area'})
         
-        function point:onEnter()
+        function huntingPoint:onEnter()
             --print('entered range of point', self.id)
             insideLegalZone = true
         end
         
-        function point:onExit()
+        function huntingPoint:onExit()
             --print('left range of point', self.id)
             insideLegalZone = false
         end
     end
 end
 
-local function GetListOfAllowedAnimals()
+local function getListOfAllowedAnimals()
     for key,_ in pairs(Config.allowedAnimals) do
         table.insert(allowedAnimals, key)
     end
@@ -56,7 +82,222 @@ local function get_animal_model(entity)
         end
     end
 end
- 
+
+local function loadanimdict(dictname)
+	if not HasAnimDictLoaded(dictname) then
+		RequestAnimDict(dictname) 
+		while not HasAnimDictLoaded(dictname) do 
+			Citizen.Wait(1)
+		end
+	end
+end
+
+local function slaughter(data)
+    local hasHorns=false
+    local animalType = get_animal_model(data.entity)
+    local netEntity = NetworkGetNetworkIdFromEntity(data.entity)
+    local minMeat = Config.allowedAnimals[animalType].minMeatAmount
+    local maxMeat = Config.allowedAnimals[animalType].maxMeatAmount
+    local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(data.entity))
+    print("found/read :", amountOfMeatLeftToGive )
+    if not amountOfMeatLeftToGive then 
+        amountOfMeatLeftToGive = math.random(minMeat , maxMeat)
+        TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(data.entity), amountOfMeatLeftToGive)
+        print("first init :", amountOfMeatLeftToGive )
+    end
+    if GetPedDrawableVariation(data.entity, 8)==1 then
+        hasHorns = true
+    end   
+    TriggerServerEvent('hunterXhunter:slaughter', netEntity, animalType, hasHorns, amountOfMeatLeftToGive)
+end
+
+local function desableEnteringVehicle()
+    CreateThread(function ()
+        lib.disableControls:Add(23)
+        while carriying do
+            Wait(0)
+            lib.disableControls()
+        end
+        lib.disableControls:Clear(23)
+    end)
+end
+
+local function carry(data)
+    local entity = data.entity
+    local vehicleId = GetEntityAttachedTo(entity) -- block to set vehicle to empty
+    local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(entity))
+    print("carry :", amountOfMeatLeftToGive ) --for debug 
+    if vehicleId then
+        TriggerServerEvent('hunterXhunter:setVehicleState', NetworkGetNetworkIdFromEntity(vehicleId), nil) --set vehicle empty
+    end
+    carriying = true
+    desableEnteringVehicle()
+    DetachEntity(entity, true, true)-- when attached to vehicle
+    local cords = GetEntityCoords(entity)
+    local heading = GetEntityHeading(entity)
+    local x, y, z = table.unpack(cords)
+    local clone = ClonePed(entity, true, false, true)
+    lastEntity = clone
+    TriggerServerEvent("hunterXhunter:removeOldEntity", NetworkGetNetworkIdFromEntity(entity)) -- delete old animal that freezes
+    
+    TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(clone), true) 
+    TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(clone), amountOfMeatLeftToGive) --copy amount to clone
+    
+    SetEntityCoords(clone, x, y, z, false, false, true, false)
+    SetEntityHeading(clone, heading)
+    
+    AttachEntityToEntity(clone, PlayerPedId(), 0, 0.35, 0.0, 1.53, 0.5, 0.5, 0.0, false, false, false, false, 2, true) -- z=0.63 is the shoulder but doesnt syncs still shit 
+    SetEntityCollision(clone, true, false)
+
+    loadanimdict('missfinale_c2mcs_1')
+    TaskPlayAnim(PlayerPedId(), 'missfinale_c2mcs_1', 'fin_c2_mcs_1_camman', 8.0, -8.0, 100000, 49, 0, false, false, false)
+end
+
+local function drop(data)
+    lastEntity = nil
+    carriying = false
+    local entity = data.entity
+    DetachEntity(entity, true, true)
+    TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(entity), false)
+    ClearPedSecondaryTask(PlayerPedId())
+end
+
+local function put_on_roof(data)
+    -- if not insideLegalZone then 
+    --     TriggerServerEvent('hunterXhunter:signalIllegalHunting', GetEntityCoords(PlayerPedId()))
+    -- end 
+    local entity = data.entity
+    local animalCoords = GetEntityCoords(entity)
+    local vehicleId, vehicleCoords = lib.getClosestVehicle(animalCoords, 6, true)
+    if GetHashKey("mesa3")==GetEntityModel(vehicleId) then
+        if vehicleId then
+            local state = Entity(vehicleId).state
+            local isVehicleFull = state.full
+            if not isVehicleFull then 
+                TriggerServerEvent('hunterXhunter:setVehicleState', NetworkGetNetworkIdFromEntity(vehicleId), true) --set vehicle full
+                TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(entity), false)
+                lastEntity = nil
+                carriying = false
+                DetachEntity(entity, true, true)
+                ClearPedSecondaryTask(PlayerPedId())
+                ClearPedSecondaryTask(entity) --TODO add animation to animal
+                AttachEntityToEntity(entity, vehicleId, 0, 0.0, -1.5, 2.40, 0.0, 0.5, 270.0, false, false, false, false, 2, true) -- z=0.63 is the shoulder but doesnt syncs still shit 
+                SetEntityCollision(entity, true, false) 
+            else
+                lib.notify({
+                    id = 'vehicle_full',
+                    title = 'ERROR',
+                    description = 'vehicle full',
+                    position = 'top',
+                    style = {
+                        backgroundColor = '#141517',
+                        color = '#909296'
+                    },
+                    icon = 'ban',
+                    iconColor = '#C53030'
+                })
+            end
+        else
+            lib.notify({
+                id = 'vehicle_far',
+                title = 'ERROR',
+                description = 'no vehicles around here',
+                position = 'top',
+                style = {
+                    backgroundColor = '#141517',
+                    color = '#909296'
+                },
+                icon = 'ban',
+                iconColor = '#C53030'
+            })
+        end
+    else 
+        lib.notify({
+            id = 'vehicle_model_not_supported',
+            title = 'ERROR',
+            description = 'vehicles model not supported, only works for mesa3',
+            position = 'top',
+            style = {
+                backgroundColor = '#141517',
+                color = '#909296'
+            },
+            icon = 'ban',
+            iconColor = '#C53030'
+        })
+    end
+end
+
+local animalsOptions = {
+    {
+        name = 'slaughter',
+        onSelect = function (data)
+            slaughter(data)
+        end,
+        icon = 'fa-solid fa-skull-cow',
+        label = 'slaughter',
+        canInteract = function(entity, distance, coords, name, bone)
+            local state = Entity(entity).state
+            local isEntityCarried = state.carried
+            return IsPedDeadOrDying(entity, true) and (not carriying) and (not lastEntity) and (not isEntityCarried) and (canHuntOutSideLegalZone or insideLegalZone) and insideSlaughterhouseZone --GetPedType(entity) == 28  this is no longer needed
+        end
+    },
+    {
+        name = 'carry',
+        onSelect = function (data)
+            carry(data)
+        end,
+        icon = 'fa-solid fa-skull-cow',
+        label = 'carry',
+        canInteract = function(entity, distance, coords, name, bone)
+            local state = Entity(entity).state
+            local isEntityCarried = state.carried
+            return IsPedDeadOrDying(entity, true) and (not carriying) and (not lastEntity) and (not isEntityCarried) and (canHuntOutSideLegalZone or insideLegalZone)
+        end
+    },
+    {
+        name = 'drop',
+        onSelect = function (data)
+            drop(data)
+        end,
+        icon = 'fa-solid fa-skull-cow',
+        label = 'drop',
+        canInteract = function(entity, distance, coords, name, bone)
+            return IsPedDeadOrDying(entity, true) and carriying and (lastEntity==entity) and (canHuntOutSideLegalZone or insideLegalZone)
+        end
+    },
+    {
+        name = 'load',
+        onSelect = function (data)
+            put_on_roof(data)
+        end,
+        icon = 'fa-solid fa-skull-cow',
+        label = 'put on roof',
+        canInteract = function(entity, distance, coords, name, bone)
+            return IsPedDeadOrDying(entity, true) and carriying and (lastEntity==entity) and (canHuntOutSideLegalZone or insideLegalZone)
+        end
+    },
+
+
+}
+
+RegisterNetEvent('hunterXhunter:drawOutlaw')
+AddEventHandler('hunterXhunter:drawOutlaw', function(cords)
+    local blip = AddBlipForCoord(cords)
+    SetBlipSprite(blip, outalwBlipSprite)
+    SetBlipDisplay(blip, 4)
+    SetBlipScale(blip, outlawBlipScale)
+    SetBlipColour(blip, outlawBlipColor)
+
+    SetBlipAsShortRange(blip, true)
+    BeginTextCommandSetBlipName('STRING')
+    AddTextComponentSubstringPlayerName('Outlaw hunter')
+    EndTextCommandSetBlipName(blip)
+
+    SetTimeout(outlawDrawBlipTimeout, function() 
+        RemoveBlip(blip)
+    end)
+end)
+
 lib.callback.register('hunterXhunter:showPrgressbar', function(text, sec)
     if lib.progressCircle({
         position = 'bottom',
@@ -84,206 +325,36 @@ lib.callback.register('hunterXhunter:showPrgressbar', function(text, sec)
   end
 )
 
-lib.callback.register('hunterXhunter:insideLegalZone', function()
-    return insideLegalZone
-  end
-)
-
-local function loadanimdict(dictname)
-	if not HasAnimDictLoaded(dictname) then
-		RequestAnimDict(dictname) 
-		while not HasAnimDictLoaded(dictname) do 
-			Citizen.Wait(1)
-		end
-	end
-end
-
-local function slaughter(data, amountOfMeatLeftToGive)
-    local hasHorns=false
-        
-    if GetPedDrawableVariation(data.entity, 8)==1 then
-        hasHorns = true
+AddEventHandler('esx:onPlayerDeath', function(data)-- if player is dead detach animal
+    if lastEntity then 
+        DetachEntity(lastEntity, true, true)
+        TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(lastEntity), false)
+        ClearPedSecondaryTask(PlayerPedId())
+        lastEntity = nil
+        carriying = false
     end
-    --end
-    local animalType = get_animal_model(data.entity)
-    local netEntity = NetworkGetNetworkIdFromEntity(data.entity)
-    TriggerServerEvent('hunterXhunter:slaughter', netEntity, animalType, hasHorns, amountOfMeatLeftToGive)
-end
-
-local function carry(data)
-    -- if not insideLegalZone then 
-    --     TriggerServerEvent('hunterXhunter:signalIllegalHunting', GetEntityCoords(PlayerPedId()))
-    -- end 
-    local entity = data.entity
-    local vehicleId = GetEntityAttachedTo(entity) -- block to set vehicle to empty
-    local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(entity))
-    print("carry :", amountOfMeatLeftToGive )
-    if vehicleId then
-        TriggerServerEvent('hunterXhunter:setVehicleState', NetworkGetNetworkIdFromEntity(vehicleId), nil) --set vehicle empty
-    end
-    carriying = true
-    DetachEntity(entity, true, true)-- when attached to vehicle
-    local cords = GetEntityCoords(entity)
-    local heading = GetEntityHeading(entity)
-    local x, y, z = table.unpack(cords)
-    local clone = ClonePed(entity, true, false, true)
-    lastEntity = clone
-    TriggerServerEvent("hunterXhunter:removeOldEntity", NetworkGetNetworkIdFromEntity(entity)) -- delete old animal that freezes
-    
-    TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(clone), true) 
-    TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(clone), amountOfMeatLeftToGive) --copy amount to clone
-    
-    SetEntityCoords(clone, x, y, z, false, false, true, false)
-    SetEntityHeading(clone, heading)
-    
-    AttachEntityToEntity(clone, PlayerPedId(), 0, 0.35, 0.0, 1.53, 0.5, 0.5, 0.0, false, false, false, false, 2, true) -- z=0.63 is the shoulder but doesnt syncs still shit 
-    SetEntityCollision(clone, true, false)
-
-    loadanimdict('missfinale_c2mcs_1')
-    TaskPlayAnim(PlayerPedId(), 'missfinale_c2mcs_1', 'fin_c2_mcs_1_camman', 8.0, -8.0, 100000, 49, 0, false, false, false)
-end
-
-local function drop(data)
-    -- if not insideLegalZone then 
-    --     TriggerServerEvent('hunterXhunter:signalIllegalHunting', GetEntityCoords(PlayerPedId()))
-    -- end 
-    lastEntity = nil
-    carriying = false
-    local entity = data.entity
-    DetachEntity(entity, true, true)
-    TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(entity), false)
-    ClearPedSecondaryTask(PlayerPedId())
-end
-
-local function put_on_roof(data)
-    -- if not insideLegalZone then 
-    --     TriggerServerEvent('hunterXhunter:signalIllegalHunting', GetEntityCoords(PlayerPedId()))
-    -- end 
-    local entity = data.entity
-    local animalCoords = GetEntityCoords(entity)
-    local vehicleId, vehicleCoords = lib.getClosestVehicle(animalCoords, 6, true)
-    if vehicleId then
-        local state = Entity(vehicleId).state
-        local isVehicleFull = state.full
-        if not isVehicleFull then 
-            TriggerServerEvent('hunterXhunter:setVehicleState', NetworkGetNetworkIdFromEntity(vehicleId), true) --set vehicle full
-            TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(entity), false)
-            lastEntity = nil
-            carriying = false
-            DetachEntity(entity, true, true)
-            ClearPedSecondaryTask(PlayerPedId())
-            ClearPedSecondaryTask(entity) --TODO add animation to animal
-            AttachEntityToEntity(entity, vehicleId, 0, 0.0, -1.5, 2.40, 0.0, 0.5, 270.0, false, false, false, false, 2, true) -- z=0.63 is the shoulder but doesnt syncs still shit 
-            SetEntityCollision(entity, true, false) 
-        else
-            lib.notify({
-                id = 'vehicle_full',
-                title = 'ERROR',
-                description = 'vehicle full',
-                position = 'top',
-                style = {
-                    backgroundColor = '#141517',
-                    color = '#909296'
-                },
-                icon = 'ban',
-                iconColor = '#C53030'
-            })
-        end
-    else
-        lib.notify({
-            id = 'vehicle_far',
-            title = 'ERROR',
-            description = 'no vehicles around here',
-            position = 'top',
-            style = {
-                backgroundColor = '#141517',
-                color = '#909296'
-            },
-            icon = 'ban',
-            iconColor = '#C53030'
-        })
-    end
-    
-end
-
-local animalsOptions = {
-    {
-        name = 'slaughter',
-        onSelect = function (data)
-            local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(data.entity))
-            print("found/read :", amountOfMeatLeftToGive )
-            if not amountOfMeatLeftToGive then 
-                amountOfMeatLeftToGive = math.random(40,70)
-                TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(data.entity), amountOfMeatLeftToGive)
-                print("first init :", amountOfMeatLeftToGive )
-            end
-            slaughter(data, amountOfMeatLeftToGive)
-        end,
-        icon = 'fa-solid fa-skull-cow',
-        label = 'slaughter',
-        canInteract = function(entity, distance, coords, name, bone)
-            local state = Entity(entity).state
-            local isEntityCarried = state.carried
-            return IsPedDeadOrDying(entity, true) and (not carriying) and (not lastEntity) and (not isEntityCarried)--GetPedType(entity) == 28  this is no longer needed
-        end
-    },
-    {
-        name = 'carry',
-        onSelect = function (data)
-            carry(data)
-        end,
-        icon = 'fa-solid fa-skull-cow',
-        label = 'carry',
-        canInteract = function(entity, distance, coords, name, bone)
-            local state = Entity(entity).state
-            local isEntityCarried = state.carried
-            return IsPedDeadOrDying(entity, true) and (not carriying) and (not lastEntity) and (not isEntityCarried)--GetPedType(entity) == 28  this is no longer needed
-        end
-    },
-    {
-        name = 'drop',
-        onSelect = function (data)
-            drop(data)
-        end,
-        icon = 'fa-solid fa-skull-cow',
-        label = 'drop',
-        canInteract = function(entity, distance, coords, name, bone)
-            return IsPedDeadOrDying(entity, true) and carriying and (lastEntity==entity)--GetPedType(entity) == 28  this is no longer needed
-        end
-    },
-    {
-        name = 'load',
-        onSelect = function (data)
-            put_on_roof(data)
-        end,
-        icon = 'fa-solid fa-skull-cow',
-        label = 'put on roof',
-        canInteract = function(entity, distance, coords, name, bone)
-            return IsPedDeadOrDying(entity, true) and carriying and (lastEntity==entity)--GetPedType(entity) == 28  this is no longer needed
-        end
-    },
-
-
-}
-
-RegisterNetEvent('hunterXhunter:drawOutlaw')
-AddEventHandler('hunterXhunter:drawOutlaw', function(cords)
-    local blip = AddBlipForCoord(cords)
-    SetBlipSprite(blip, 303)
-    SetBlipDisplay(blip, 4)
-    SetBlipScale(blip, 0.6)
-    SetBlipColour(blip, 23)
-
-    SetBlipAsShortRange(blip, true)
-    BeginTextCommandSetBlipName('STRING')
-    AddTextComponentSubstringPlayerName('Outlaw hunter')
-    EndTextCommandSetBlipName(blip)
-
-    SetTimeout(100000, function() 
-        RemoveBlip(blip)
-    end)
 end)
 
-GetListOfAllowedAnimals()
+CreateThread(function ()
+
+    local allowedWeaponHash = GetHashKey("WEAPON_MUSKET")
+    while true do 
+        Wait(600)
+        local player = PlayerPedId()
+        local playerNetId = NetworkGetPlayerIndexFromPed(player)
+        local isAiming, entity = GetEntityPlayerIsFreeAimingAt(playerNetId)
+        local _, currentWeaponHash  = GetCurrentPedWeapon(player, 1)
+        if isAiming and get_animal_model(entity) and ((not insideLegalZone) or ((currentWeaponHash ~= allowedWeaponHash) and insideLegalZone)) then 
+            TriggerServerEvent('hunterXhunter:signalIllegalHunting', GetEntityCoords(player))
+        end
+    end
+end)
+
+setSlaughterHouse()
+getListOfAllowedAnimals()
 setHuntingZone(Config.legalHuntingAreas)
 ox_target:addModel(allowedAnimals, animalsOptions)
+
+
+
+
