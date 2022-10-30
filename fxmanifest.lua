@@ -5,7 +5,7 @@ lua54 'yes'
 name "hunterXhunter"
 description "hunting job"
 author "daiguel"
-version "1.0.0"
+version "1.0.5"
 
 shared_scripts {
 	'@es_extended/imports.lua',

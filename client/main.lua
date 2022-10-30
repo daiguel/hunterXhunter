@@ -74,7 +74,7 @@ local function getListOfAllowedAnimals()
     end
 end
 
-local function get_animal_model(entity)
+local function getAnimalModel(entity)
     local hash = GetEntityModel(entity)
     for _, animal in pairs(allowedAnimals) do 
         if GetHashKey(animal)==hash then
@@ -94,7 +94,7 @@ end
 
 local function slaughter(data)
     local hasHorns=false
-    local animalType = get_animal_model(data.entity)
+    local animalType = getAnimalModel(data.entity)
     local netEntity = NetworkGetNetworkIdFromEntity(data.entity)
     local minMeat = Config.allowedAnimals[animalType].minMeatAmount
     local maxMeat = Config.allowedAnimals[animalType].maxMeatAmount
@@ -122,6 +122,31 @@ local function desableEnteringVehicle()
     end)
 end
 
+local function animalPositionBasedOnPed(entity)
+    local animalType =  getAnimalModel(entity)
+    local xPos, zPos
+    if animalType=="a_c_deer" or animalType=="a_c_cow" then
+        zPos = 1.53
+        xPos = 0.35
+    elseif  animalType=="a_c_boar" then
+        zPos = 0.91 
+        xPos = -0.29
+    elseif  animalType=="a_c_coyote" then
+        zPos = 0.91 
+        xPos = 0.24
+    elseif  animalType=="a_c_rabbit_01" then
+        zPos = 0.61 
+        xPos = 0.34
+    elseif  animalType=="a_c_mtlion" then
+        zPos = 1.01 
+        xPos = 0.30
+    else
+        zPos = 0.61 
+        xPos = 0.30
+    end
+    return zPos, xPos
+end
+
 local function carry(data)
     local entity = data.entity
     local vehicleId = GetEntityAttachedTo(entity) -- block to set vehicle to empty
@@ -141,12 +166,14 @@ local function carry(data)
     TriggerServerEvent("hunterXhunter:removeOldEntity", NetworkGetNetworkIdFromEntity(entity)) -- delete old animal that freezes
     
     TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(clone), true) 
-    TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(clone), amountOfMeatLeftToGive) --copy amount to clone
+    TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(clone), amountOfMeatLeftToGive) --copy amount of meat to clone
     
     SetEntityCoords(clone, x, y, z, false, false, true, false)
     SetEntityHeading(clone, heading)
+
+    local zPos , xPos = animalPositionBasedOnPed(clone)
     
-    AttachEntityToEntity(clone, PlayerPedId(), 0, 0.35, 0.0, 1.53, 0.5, 0.5, 0.0, false, false, false, false, 2, true) -- z=0.63 is the shoulder but doesnt syncs still shit 
+    AttachEntityToEntity(clone, PlayerPedId(), 0, xPos, 0.0, zPos, 0.5, 0.5, 0.0, false, false, false, false, 2, true) -- z=0.63 
     SetEntityCollision(clone, true, false)
 
     loadanimdict('missfinale_c2mcs_1')
@@ -162,13 +189,37 @@ local function drop(data)
     ClearPedSecondaryTask(PlayerPedId())
 end
 
-local function put_on_roof(data)
-    -- if not insideLegalZone then 
-    --     TriggerServerEvent('hunterXhunter:signalIllegalHunting', GetEntityCoords(PlayerPedId()))
-    -- end 
+local function animalPositionBasedOnVehicle(entity)
+    local animalType =  getAnimalModel(entity)
+    local yPos, zPos
+    if animalType=="a_c_deer" or animalType=="a_c_cow" then
+        zPos = 2.40
+        yPos = -1.5
+    elseif  animalType=="a_c_boar" then
+        zPos = 1.90
+        yPos = -0.9
+    elseif  animalType=="a_c_coyote" then
+        zPos = 1.80
+        yPos = -1.8
+    elseif  animalType=="a_c_rabbit_01" then
+        zPos = 1.50
+        yPos = -1.5
+    elseif  animalType=="a_c_mtlion" then
+        zPos = 1.90
+        yPos = -1.8
+    else
+        zPos = 1.50
+        yPos = -1.5
+    end
+    print(zPos, yPos, animalType)
+    return yPos, zPos
+end
+
+
+local function putOnRoof(data)
     local entity = data.entity
     local animalCoords = GetEntityCoords(entity)
-    local vehicleId, vehicleCoords = lib.getClosestVehicle(animalCoords, 6, true)
+    local vehicleId, vehicleCoords = lib.getClosestVehicle(animalCoords, 4, true)
     if GetHashKey("mesa3")==GetEntityModel(vehicleId) then
         if vehicleId then
             local state = Entity(vehicleId).state
@@ -181,7 +232,8 @@ local function put_on_roof(data)
                 DetachEntity(entity, true, true)
                 ClearPedSecondaryTask(PlayerPedId())
                 ClearPedSecondaryTask(entity) --TODO add animation to animal
-                AttachEntityToEntity(entity, vehicleId, 0, 0.0, -1.5, 2.40, 0.0, 0.5, 270.0, false, false, false, false, 2, true) -- z=0.63 is the shoulder but doesnt syncs still shit 
+                local  yPos, zPos = animalPositionBasedOnVehicle(entity)
+                AttachEntityToEntity(entity, vehicleId, 0, 0.0, yPos, zPos, 0.0, 0.5, 270.0, false, false, false, false, 2, true)
                 SetEntityCollision(entity, true, false) 
             else
                 lib.notify({
@@ -268,7 +320,7 @@ local animalsOptions = {
     {
         name = 'load',
         onSelect = function (data)
-            put_on_roof(data)
+            putOnRoof(data)
         end,
         icon = 'fa-solid fa-skull-cow',
         label = 'put on roof',
@@ -344,7 +396,7 @@ CreateThread(function ()
         local playerNetId = NetworkGetPlayerIndexFromPed(player)
         local isAiming, entity = GetEntityPlayerIsFreeAimingAt(playerNetId)
         local _, currentWeaponHash  = GetCurrentPedWeapon(player, 1)
-        if isAiming and get_animal_model(entity) and ((not insideLegalZone) or ((currentWeaponHash ~= allowedWeaponHash) and insideLegalZone)) then 
+        if isAiming and getAnimalModel(entity) and ((not insideLegalZone) or ((currentWeaponHash ~= allowedWeaponHash) and insideLegalZone)) then 
             TriggerServerEvent('hunterXhunter:signalIllegalHunting', GetEntityCoords(player))
         end
     end

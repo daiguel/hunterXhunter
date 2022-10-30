@@ -6,8 +6,9 @@ Config.allowToHuntOutSideZone = true --disable slaughter carry/drop and put on r
 Config.allowedAnimals = {   --list of animals allowed to hunt
     a_c_mtlion = { minMeatAmount = 30, maxMeatAmount = 50 }, 
     a_c_deer = { minMeatAmount = 70, maxMeatAmount = 120 }, 
-    --a_c_rabbit_01 = { minMeatAmount = 1, maxMeatAmount = 2 }, -- :(
+    --a_c_rabbit_01 = { minMeatAmount = 1, maxMeatAmount = 4 }, -- :(
     a_c_boar =  { minMeatAmount = 50, maxMeatAmount = 60 },
+    --a_c_coyote =  { minMeatAmount = 20, maxMeatAmount = 30 },
     --a_c_cow =  { minMeatAmount = 40, maxMeatAmount = 70 } --not a wild animal :(
 } 
 

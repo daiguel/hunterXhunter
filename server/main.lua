@@ -146,3 +146,5 @@ AddEventHandler('hunterXhunter:setVehicleState', function(vehicleNetId, state)
     local vehicle = NetworkGetEntityFromNetworkId(vehicleNetId)
     Entity(vehicle).state.full = state
 end)
+
+lib.versionCheck('daiguel/hunterXhunter')

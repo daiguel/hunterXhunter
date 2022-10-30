@@ -1,5 +1,4 @@
 # What's in this resource
-
 + deers with horns will give you horns to sell /if deer without horns it does not give u anything - only deer gives horns
 + police get notifications and markers on map when illegally hunting / easy to configure custom notifications 
 + add/remove animals to be hunted in config.lua check this file too see the default animals set to hunt 
@@ -16,16 +15,24 @@
 + illegal hunting can be done everywhere in the map
 + used ox_inventory Store to purchase items needed for hunt
 
+# PREVIEW
+- <a href="https://youtu.be/4BJ8PjH5P8A">preview</a>
+
 # HOW TO install
 + drag and drop
+
 # DEPENDCIES
  - <a href="https://github.com/ESX-Org/es_extended">es_extended</a>
  - <a href="https://github.com/ESX-Org/esx_license">esx_license</a> 
  - <a href="https://github.com/overextended/ox_inventory">ox_inventory</a>
  - <a href="https://github.com/overextended/ox_lib">ox_lib</a>
  - <a href="https://github.com/overextended/ox_target">ox_target</a>
+
+# RASMON AT HIGHEST USAGE
+![alt text](https://i.imgur.com/wJfWxNK.png "perfs") 
+
 # 	OX_INVENTORY CONFIG
-## shop
+1. shop
 ```lua
     hutingShop = {
 		name = 'HUNTING SHOP',
@@ -43,7 +50,7 @@
 		}
 	},
 ```
-## ITEMS
+2. ITEMS
 ```lua
 	['leather'] = {
 		label = 'leather',
@@ -69,4 +76,8 @@
 		consume = 0
 	},
 ```
-## images used 
+## images used for items 
+![alt text](https://i.imgur.com/T5CMwjB.png "MEAT") 
+![alt text](https://i.imgur.com/25H7bys.png "leather") 
+![alt text](https://i.imgur.com/kwdrzYs.png "DAGGER") 
+![alt text](https://i.imgur.com/eVDPru6.png "HORNS")  
