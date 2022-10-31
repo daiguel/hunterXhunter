@@ -8,7 +8,7 @@ AddEventHandler('hunterXhunter:sellItem', function(itemName, amount, price)
 			if success then
 				TriggerClientEvent('ox_lib:notify', source, {
 					type = 'success',
-					description = "you have sold "..amount..'X of '..itemName
+					description = locale("items_sold")..amount..locale("items_count")..itemName
 				})
 				--TODO push them out before deleting
 			else

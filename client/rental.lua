@@ -20,8 +20,8 @@ local hunterOptions = {
         onSelect = function(data)
 			spawnCar()
         end,
-        icon = TranslateCap('rental_menu_icon'),
-        label = TranslateCap('rent_car_for')..renCost..TranslateCap('coin'),
+        icon = locale('rental_menu_icon'),
+        label = locale('rent_car_for')..renCost..locale('coin'),
         distance = 2,
         canInteract = function(entity, coords, distance)
             return ((not IsPedDeadOrDying(PlayerPedId(), true))) and (not IsPedCuffed(PlayerPedId())) 
@@ -136,7 +136,7 @@ local function setTakeBackCar()
 		if (self.currentDistance <= range) and (isCurrentCarRentedByThisPalyer) and (vehicle ~=0) then
 			if not MessageShown then
 				MessageShown = true
-				lib.showTextUI(TranslateCap('return_veh'), {
+				lib.showTextUI(locale('return_veh'), {
 					position = "bottom-center",
 					style = {
 						borderRadius = 30,

@@ -235,7 +235,7 @@ local function putOnRoof(data)
                 lib.notify({
                     id = 'vehicle_full',
                     title = 'ERROR',
-                    description = TranslateCap('vehicle_full'), 
+                    description = locale('vehicle_full'), 
                     position = 'top',
                     style = {
                         backgroundColor = '#141517',
@@ -249,7 +249,7 @@ local function putOnRoof(data)
             lib.notify({
                 id = 'vehicle_far',
                 title = 'ERROR',
-                description = TranslateCap('vehicle_far'),
+                description = locale('vehicle_far'),
                 position = 'top',
                 style = {
                     backgroundColor = '#141517',
@@ -263,7 +263,7 @@ local function putOnRoof(data)
         lib.notify({
             id = 'vehicle_model_not_supported',
             title = 'ERROR',
-            description = TranslateCap('vehicle_model_not_supported'),
+            description = locale('vehicle_model_not_supported'),
             position = 'top',
             style = {
                 backgroundColor = '#141517',
@@ -281,8 +281,8 @@ local animalsOptions = {
         onSelect = function (data)
             slaughter(data)
         end,
-        icon = TranslateCap('icon_slaughter'),
-        label = TranslateCap('slaughter'),
+        icon = locale('icon_slaughter'),
+        label = locale('slaughter'),
         canInteract = function(entity, distance, coords, name, bone)
             local state = Entity(entity).state
             local isEntityCarried = state.carried
@@ -294,8 +294,8 @@ local animalsOptions = {
         onSelect = function (data)
             carry(data)
         end,
-        icon = TranslateCap('icon_carry'),
-        label = TranslateCap('carry'),
+        icon = locale('icon_carry'),
+        label = locale('carry'),
         canInteract = function(entity, distance, coords, name, bone)
             local state = Entity(entity).state
             local isEntityCarried = state.carried
@@ -307,8 +307,8 @@ local animalsOptions = {
         onSelect = function (data)
             drop(data)
         end,
-        icon = TranslateCap('icon_drop'),
-        label = TranslateCap('drop'),
+        icon = locale('icon_drop'),
+        label = locale('drop'),
         canInteract = function(entity, distance, coords, name, bone)
             return IsPedDeadOrDying(entity, true) and carriying and (lastEntity==entity) and (canHuntOutSideLegalZone or insideLegalZone)
         end
@@ -318,8 +318,8 @@ local animalsOptions = {
         onSelect = function (data)
             putOnRoof(data)
         end,
-        icon = TranslateCap('icon_put_on_roof'),
-        label = TranslateCap('put_on_roof'),
+        icon = locale('icon_put_on_roof'),
+        label = locale('put_on_roof'),
         canInteract = function(entity, distance, coords, name, bone)
             return IsPedDeadOrDying(entity, true) and carriying and (lastEntity==entity) and (canHuntOutSideLegalZone or insideLegalZone)
         end

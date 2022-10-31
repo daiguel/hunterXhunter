@@ -4,6 +4,11 @@ Config.Locale                     = 'en'
 Config.allowToHuntWithoutLicense = true
 Config.allowToSlaughterWithoutKnif = false
 Config.allowToHuntOutSideZone = true --disable slaughter carry/drop and put on roof 
+
+Config.allowedKnifes = { 'WEAPON_DAGGER', 'WEAPON_KNIFE' } 
+
+Config.licensesNeededToHunt = { 'WEAPON' } -- add liceses here if you have hunting license add it here
+
 Config.allowedAnimals = {   --list of animals allowed to hunt
     a_c_mtlion = { minMeatAmount = 30, maxMeatAmount = 50 }, 
     a_c_deer = { minMeatAmount = 70, maxMeatAmount = 120 }, 
@@ -21,10 +26,6 @@ Config.slaughterhouse = {
     marker = 31,
     markerColor = { 3, 165, 252 } --RGB
     }
-
-Config.allowedKnifes = { 'WEAPON_DAGGER', 'WEAPON_KNIFE' } 
-
-Config.licensesNeededToHunt = { 'WEAPON' } -- add liceses here if you have hunting license add it here
 
 Config.legalHuntingAreas = { 
     area1 = { 
@@ -85,7 +86,7 @@ Config.buyer = {
 
 Config.outlaw = {
     signalfunc = function (outlawSource, outalwCoords, policeSource) -- trigger your alerts here _ will be triggered many times on each police
-        TriggerClientEvent('ox_lib:notify', policeSource, { type = 'error', description = TranslateCap('notify_cops') })
+        TriggerClientEvent('ox_lib:notify', policeSource, { type = 'error', description ="Illegal hunting activity, look map" })
     end,
     blipName = 'Outlaw hunter',
     blipSprite = 303,

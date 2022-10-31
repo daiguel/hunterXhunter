@@ -9,9 +9,7 @@ version "1.0.5"
 
 shared_scripts {
 	'@es_extended/imports.lua',
-	'@es_extended/locale.lua',
 	'@ox_lib/init.lua',
-	'locales/*.lua',
 	'shared/*.lua'
 }
 
@@ -23,6 +21,10 @@ server_scripts {
 	'@oxmysql/lib/MySQL.lua',
 	'server/*.lua'
 	
+}
+
+files {
+    'locales/*.json'
 }
 
 dependencies {

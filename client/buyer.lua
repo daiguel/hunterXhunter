@@ -1,4 +1,5 @@
 local ox_target = exports.ox_target
+lib.locale()
 
 local function sell(productName, amount, price)
 	TriggerServerEvent('hunterXhunter:sellItem', productName, amount, price)
@@ -15,7 +16,7 @@ local buyerOptions = {
 				lib.notify({
 					id = 'msg_not_enough_meat',
 					title = 'ERROR',
-					description = TranslateCap('no_meat'),
+					description = locale('no_meat'),
 					position = 'top',
 					style = {
 						backgroundColor = '#141517',
@@ -26,8 +27,8 @@ local buyerOptions = {
 				})
 			end 
         end,
-        icon = TranslateCap('icon_sell_meat'),
-        label = TranslateCap('sell_meat')..Config.buyer.prices.meat..TranslateCap('per_kg'),
+        icon = locale('icon_sell_meat'),
+        label = locale('sell_meat')..Config.buyer.prices.meat..locale('per_kg'),
         distance = 2,
         canInteract = function(entity, coords, distance)
             return ((not IsPedDeadOrDying(PlayerPedId(), true))) and (not IsPedCuffed(PlayerPedId())) 
@@ -43,7 +44,7 @@ local buyerOptions = {
 				lib.notify({
 					id = 'msg_not_enough_horns',
 					title = 'ERROR',
-					description = TranslateCap('no_deer_horns'),
+					description = locale('no_deer_horns'),
 					position = 'top',
 					style = {
 						backgroundColor = '#141517',
@@ -54,8 +55,8 @@ local buyerOptions = {
 				})
 			end 
         end,
-        icon = TranslateCap('icon_sell_horns'),
-        label = TranslateCap('sell_deer_horns')..Config.buyer.prices.horns..TranslateCap('deer_horns_per_unit'),
+        icon = locale('icon_sell_horns'),
+        label = locale('sell_deer_horns')..Config.buyer.prices.horns..locale('deer_horns_per_unit'),
         distance = 2,
         canInteract = function(entity, coords, distance)
             return ((not IsPedDeadOrDying(PlayerPedId(), true))) and (not IsPedCuffed(PlayerPedId())) 
@@ -71,7 +72,7 @@ local buyerOptions = {
 				lib.notify({
 					id = 'msg_not_enough_leather',
 					title = 'ERROR',
-					description = TranslateCap('no_leather'),
+					description = locale('no_leather'),
 					position = 'top',
 					style = {
 						backgroundColor = '#141517',
@@ -82,8 +83,8 @@ local buyerOptions = {
 				})
 			end 
         end,
-        icon = TranslateCap('icon_sell_leather'),
-        label = TranslateCap('sell_leather')..Config.buyer.prices.leather..TranslateCap('leather_per_unit'),
+        icon = locale('icon_sell_leather'),
+        label = locale('sell_leather')..Config.buyer.prices.leather..locale('leather_per_unit'),
         distance = 2,
         canInteract = function(entity, coords, distance)
             return ((not IsPedDeadOrDying(PlayerPedId(), true))) and (not IsPedCuffed(PlayerPedId())) 
