@@ -15,7 +15,7 @@ local buyerOptions = {
 				lib.notify({
 					id = 'msg_not_enough_meat',
 					title = 'ERROR',
-					description = 'you do not have any meat',
+					description = TranslateCap('no_meat'),
 					position = 'top',
 					style = {
 						backgroundColor = '#141517',
@@ -26,8 +26,8 @@ local buyerOptions = {
 				})
 			end 
         end,
-        icon = 'fa-solid fa-truck-moving',
-        label = 'sell meat, '..Config.buyer.prices.meat..'$ per kg',
+        icon = TranslateCap('icon_sell_meat'),
+        label = TranslateCap('sell_meat')..Config.buyer.prices.meat..TranslateCap('per_kg'),
         distance = 2,
         canInteract = function(entity, coords, distance)
             return ((not IsPedDeadOrDying(PlayerPedId(), true))) and (not IsPedCuffed(PlayerPedId())) 
@@ -43,7 +43,7 @@ local buyerOptions = {
 				lib.notify({
 					id = 'msg_not_enough_horns',
 					title = 'ERROR',
-					description = 'you do not have any horns',
+					description = TranslateCap('no_deer_horns'),
 					position = 'top',
 					style = {
 						backgroundColor = '#141517',
@@ -54,8 +54,8 @@ local buyerOptions = {
 				})
 			end 
         end,
-        icon = 'fa-solid fa-truck-moving',
-        label = 'sell horns, '..Config.buyer.prices.horns..'$ per unit',
+        icon = TranslateCap('icon_sell_horns'),
+        label = TranslateCap('sell_deer_horns')..Config.buyer.prices.horns..TranslateCap('deer_horns_per_unit'),
         distance = 2,
         canInteract = function(entity, coords, distance)
             return ((not IsPedDeadOrDying(PlayerPedId(), true))) and (not IsPedCuffed(PlayerPedId())) 
@@ -71,7 +71,7 @@ local buyerOptions = {
 				lib.notify({
 					id = 'msg_not_enough_leather',
 					title = 'ERROR',
-					description = 'you do not have any leather',
+					description = TranslateCap('no_leather'),
 					position = 'top',
 					style = {
 						backgroundColor = '#141517',
@@ -82,8 +82,8 @@ local buyerOptions = {
 				})
 			end 
         end,
-        icon = 'fa-solid fa-truck-moving',
-        label = 'sell leather, '..Config.buyer.prices.leather..'$ per unit',
+        icon = TranslateCap('icon_sell_leather'),
+        label = TranslateCap('sell_leather')..Config.buyer.prices.leather..TranslateCap('leather_per_unit'),
         distance = 2,
         canInteract = function(entity, coords, distance)
             return ((not IsPedDeadOrDying(PlayerPedId(), true))) and (not IsPedCuffed(PlayerPedId())) 
@@ -94,12 +94,11 @@ local buyerOptions = {
 local function createblip(coords, blipSprite, scale, color)
     local blip = AddBlipForCoord(coords)
     SetBlipSprite(blip, blipSprite)
-	-- SetBlipDisplay(blip, 4)
 	SetBlipScale(blip, scale)
 	SetBlipColour(blip, color)
 	SetBlipAsShortRange(blip, true)
 	BeginTextCommandSetBlipName('STRING')
-	AddTextComponentSubstringPlayerName('sell Hunted goods')
+	AddTextComponentSubstringPlayerName(Config.buyer.blipName)
 	EndTextCommandSetBlipName(blip)
 end
 

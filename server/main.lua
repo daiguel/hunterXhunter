@@ -7,7 +7,7 @@ local function canCarry(_source, itemName, amount)
     elseif (amountToAdd > 0) then 
         return amount
     end
-    TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = "inventory full" })
+    TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = TranslateCap('inventory_full') })
     return false
     
 end
@@ -16,7 +16,7 @@ local function addItem(_source, itemName, amount)
     local flag = false
     ox_inventory:AddItem(_source, itemName, amount, nil, nil, function(success, reason)
         if success then
-            TriggerClientEvent('ox_lib:notify', _source, { type = 'success', description = "successfully added X"..amount.." of "..itemName })
+            TriggerClientEvent('ox_lib:notify', _source, { type = 'success', description = TranslateCap('added_x')..amount..TranslateCap('of')..itemName })
             flag =  true
         else
             TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = reason })
@@ -41,7 +41,7 @@ local function hasLicenses(identifier, source)
     for _, license in pairs(Config.licensesNeededToHunt) do
         hasLisence = MySQL.scalar.await('SELECT * FROM user_licenses WHERE owner = ? and type = ?', { identifier, license})
         if not hasLisence then
-            TriggerClientEvent('ox_lib:notify', source, { type = 'error', description = "you need "..license.." license"})
+            TriggerClientEvent('ox_lib:notify', source, { type = 'error', description = TranslateCap('you_need')..license..TranslateCap('license')})
         end
     end
     return hasLisence
@@ -64,7 +64,7 @@ AddEventHandler('hunterXhunter:slaughter', function(animalNetId, entityType, has
                 if hasCorns then
                     local amount = canCarry(_source, entityType.."_horns", 1)
                     if amount then
-                        if lib.callback.await('hunterXhunter:showPrgressbar', _source, "collecting horns", 2) then
+                        if lib.callback.await('hunterXhunter:showPrgressbar', _source, TranslateCap('collecting_horns'), 2) then
                             SetPedComponentVariation(entity, 8, 0, 0, 0) --remove horns to avoid give multiple times
                             addNext = addItem(_source, entityType.."_horns", 1)
                         else --cancel everything if progress is cancelled 
@@ -75,7 +75,7 @@ AddEventHandler('hunterXhunter:slaughter', function(animalNetId, entityType, has
                 if addNext then
                     local amount = canCarry(_source, "meat", amountOfMeatLeftToGive)
                     if amount then
-                        if lib.callback.await('hunterXhunter:showPrgressbar', _source, "collecting leather and meat", 4) then
+                        if lib.callback.await('hunterXhunter:showPrgressbar', _source, TranslateCap('collecting_leather_and_meat'), 4) then
                             if amount > 0 then --this because adding 0 is shiting everything
                                 addNext = addItem(_source, "meat", amount)
                             elseif amount == 0 then
@@ -96,13 +96,13 @@ AddEventHandler('hunterXhunter:slaughter', function(animalNetId, entityType, has
                     end
                 end 
             else
-                TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = "already slaughtered" })
+                TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = TranslateCap('already_slaughtered')})
             end
         else
-            TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = "you can't go to hunt without knife :("})
+            TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = TranslateCap('you_cant_go_to_hunt_without_knife')})
         end
     else
-        TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = "you can't slaughter without License"})
+        TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = TranslateCap('you_cant_go_to_hunt_without_knife')})
     end
 end)
 
