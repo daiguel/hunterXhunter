@@ -18,7 +18,7 @@
 # PREVIEW
 - <a href="https://youtu.be/4BJ8PjH5P8A">preview</a>
 
-# HOW TO install
+# HOW TO INSTALL
 + drag and drop
 
 # DEPENDCIES
