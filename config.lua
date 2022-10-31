@@ -1,20 +1,19 @@
 Config = {}
+Config.Locale                     = 'en'
 
-Config.allowToHuntWithoutLicense = false
+Config.allowToHuntWithoutLicense = true
 Config.allowToSlaughterWithoutKnif = false
 Config.allowToHuntOutSideZone = true --disable slaughter carry/drop and put on roof 
 Config.allowedAnimals = {   --list of animals allowed to hunt
     a_c_mtlion = { minMeatAmount = 30, maxMeatAmount = 50 }, 
     a_c_deer = { minMeatAmount = 70, maxMeatAmount = 120 }, 
-    --a_c_rabbit_01 = { minMeatAmount = 1, maxMeatAmount = 4 }, -- :(
     a_c_boar =  { minMeatAmount = 50, maxMeatAmount = 60 },
-    --a_c_coyote =  { minMeatAmount = 20, maxMeatAmount = 30 },
-    --a_c_cow =  { minMeatAmount = 40, maxMeatAmount = 70 } --not a wild animal :(
 } 
 
-Config.slaughterhouse= { 
+Config.slaughterhouse = { 
     coords = vector3( 997.3, -2179.1, 29.8 ), 
     distance = 13.0,
+    blipName = "Slaughterhouse",
     blipSprite = 463,
     blipColor = 3,
     blipScale = 0.9,
@@ -31,6 +30,7 @@ Config.legalHuntingAreas = {
     area1 = { 
         coords=vector3(1408.4, 1780.2, 100.9), --one number after coma or will not display area on map
         distance = 400.0,
+        blipName = 'Legal hunting area',
         blipSprite = 463,
         blipColor = 3,
         blipScale = 0.9,
@@ -39,6 +39,7 @@ Config.legalHuntingAreas = {
     area2 = { 
         coords=vector3(-419.9, 4727.8, 256.1),--one number after coma or will not display area on map
         distance = 200.0,
+        blipName = 'Legal hunting area',
         blipSprite = 463,
         blipColor = 3,
         blipScale = 0.9,
@@ -56,12 +57,15 @@ Config.rentalHunter = {
 		isRendered = false,
 		ped = nil,
         rentCost = 2000,
+        blipName = 'Rent car for hunt',
         blipSprite = 524,
         blipColor = 3,
-        blipScale = 0.9,
+        blipScale = 0.7,
         marker = 36,
         markerColor = { 3, 165, 252 }, --RGB
+        car = "mesa3", -- car model
         carSapwnCords = vector3(203.0993, 2454.5398, 56.5882),
+        carSapwnCordsHeading = 278.2991,
         carTakeBack = vector3(211.3851, 2477.7458, 55.4935)
 	}
 
@@ -73,15 +77,17 @@ Config.buyer = {
     coords = vector3(1185.2501, -2993.6406, 5.9021),
     heading =  303.4307, 
     prices = { horns = 15000, meat = 85, leather = 2000 }, --price of meat per kg - others per unit 
+    blipName = 'Sell hunted goods',
     blipSprite = 500,
     blipColor = 3,
-    blipScale = 0.9,
+    blipScale = 0.7,
 } 
 
 Config.outlaw = {
     signalfunc = function (outlawSource, outalwCoords, policeSource) -- trigger your alerts here _ will be triggered many times on each police
-        TriggerClientEvent('ox_lib:notify', policeSource, { type = 'error', description = "ILLEGAL HUNTING ACTIVITY LOOK MAP" })
+        TriggerClientEvent('ox_lib:notify', policeSource, { type = 'error', description = TranslateCap('notify_cops') })
     end,
+    blipName = 'Outlaw hunter',
     blipSprite = 303,
     blipColor = 23,
     blipScale = 0.9,

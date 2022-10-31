@@ -31,7 +31,7 @@ end
 
 local function setSlaughterHouse()
 
-    createBlip(slaughterhouse.coords, slaughterhouse.bigAreaColor, slaughterhouse.distance, slaughterhouse.blipSprite, slaughterhouse.blipColor, slaughterhouse.blipScale, "simple", "slaughterhouse")
+    createBlip(slaughterhouse.coords, slaughterhouse.bigAreaColor, slaughterhouse.distance, slaughterhouse.blipSprite, slaughterhouse.blipColor, slaughterhouse.blipScale, "simple", Config.slaughterhouse.blipName)
     
     local slaughterHousePoint = lib.points.new(slaughterhouse.coords, slaughterhouse.distance, { name = 'slaughterhouse'})
     local r, g, b = table.unpack(slaughterhouse.markerColor)
@@ -52,17 +52,15 @@ end
 
 local function setHuntingZone(areas)
     for _, area in pairs(areas) do
-        createBlip(area.coords, area.bigAreaColor, area.distance, area.blipSprite, area.blipColor, area.blipScale, "area", 'legal hunting area')
+        createBlip(area.coords, area.bigAreaColor, area.distance, area.blipSprite, area.blipColor, area.blipScale, "area", area.blipName)
         
         local huntingPoint = lib.points.new(area.coords, area.distance, { name = 'legal hunting area'})
         
         function huntingPoint:onEnter()
-            --print('entered range of point', self.id)
             insideLegalZone = true
         end
         
         function huntingPoint:onExit()
-            --print('left range of point', self.id)
             insideLegalZone = false
         end
     end
@@ -99,11 +97,9 @@ local function slaughter(data)
     local minMeat = Config.allowedAnimals[animalType].minMeatAmount
     local maxMeat = Config.allowedAnimals[animalType].maxMeatAmount
     local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(data.entity))
-    print("found/read :", amountOfMeatLeftToGive )
     if not amountOfMeatLeftToGive then 
         amountOfMeatLeftToGive = math.random(minMeat , maxMeat)
         TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(data.entity), amountOfMeatLeftToGive)
-        print("first init :", amountOfMeatLeftToGive )
     end
     if GetPedDrawableVariation(data.entity, 8)==1 then
         hasHorns = true
@@ -151,7 +147,7 @@ local function carry(data)
     local entity = data.entity
     local vehicleId = GetEntityAttachedTo(entity) -- block to set vehicle to empty
     local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(entity))
-    print("carry :", amountOfMeatLeftToGive ) --for debug 
+
     if vehicleId then
         TriggerServerEvent('hunterXhunter:setVehicleState', NetworkGetNetworkIdFromEntity(vehicleId), nil) --set vehicle empty
     end
@@ -239,7 +235,7 @@ local function putOnRoof(data)
                 lib.notify({
                     id = 'vehicle_full',
                     title = 'ERROR',
-                    description = 'vehicle full',
+                    description = TranslateCap('vehicle_full'), 
                     position = 'top',
                     style = {
                         backgroundColor = '#141517',
@@ -253,7 +249,7 @@ local function putOnRoof(data)
             lib.notify({
                 id = 'vehicle_far',
                 title = 'ERROR',
-                description = 'no vehicles around here',
+                description = TranslateCap('vehicle_far'),
                 position = 'top',
                 style = {
                     backgroundColor = '#141517',
@@ -267,7 +263,7 @@ local function putOnRoof(data)
         lib.notify({
             id = 'vehicle_model_not_supported',
             title = 'ERROR',
-            description = 'vehicles model not supported, only works for mesa3',
+            description = TranslateCap('vehicle_model_not_supported'),
             position = 'top',
             style = {
                 backgroundColor = '#141517',
@@ -285,8 +281,8 @@ local animalsOptions = {
         onSelect = function (data)
             slaughter(data)
         end,
-        icon = 'fa-solid fa-skull-cow',
-        label = 'slaughter',
+        icon = TranslateCap('icon_slaughter'),
+        label = TranslateCap('slaughter'),
         canInteract = function(entity, distance, coords, name, bone)
             local state = Entity(entity).state
             local isEntityCarried = state.carried
@@ -298,8 +294,8 @@ local animalsOptions = {
         onSelect = function (data)
             carry(data)
         end,
-        icon = 'fa-solid fa-skull-cow',
-        label = 'carry',
+        icon = TranslateCap('icon_carry'),
+        label = TranslateCap('carry'),
         canInteract = function(entity, distance, coords, name, bone)
             local state = Entity(entity).state
             local isEntityCarried = state.carried
@@ -311,8 +307,8 @@ local animalsOptions = {
         onSelect = function (data)
             drop(data)
         end,
-        icon = 'fa-solid fa-skull-cow',
-        label = 'drop',
+        icon = TranslateCap('icon_drop'),
+        label = TranslateCap('drop'),
         canInteract = function(entity, distance, coords, name, bone)
             return IsPedDeadOrDying(entity, true) and carriying and (lastEntity==entity) and (canHuntOutSideLegalZone or insideLegalZone)
         end
@@ -322,8 +318,8 @@ local animalsOptions = {
         onSelect = function (data)
             putOnRoof(data)
         end,
-        icon = 'fa-solid fa-skull-cow',
-        label = 'put on roof',
+        icon = TranslateCap('icon_put_on_roof'),
+        label = TranslateCap('put_on_roof'),
         canInteract = function(entity, distance, coords, name, bone)
             return IsPedDeadOrDying(entity, true) and carriying and (lastEntity==entity) and (canHuntOutSideLegalZone or insideLegalZone)
         end
@@ -342,7 +338,7 @@ AddEventHandler('hunterXhunter:drawOutlaw', function(cords)
 
     SetBlipAsShortRange(blip, true)
     BeginTextCommandSetBlipName('STRING')
-    AddTextComponentSubstringPlayerName('Outlaw hunter')
+    AddTextComponentSubstringPlayerName(Config.outlaw.blipName)
     EndTextCommandSetBlipName(blip)
 
     SetTimeout(outlawDrawBlipTimeout, function() 
@@ -368,7 +364,7 @@ lib.callback.register('hunterXhunter:showPrgressbar', function(text, sec)
             playEnter = true, 
         },
         prop = {--hate this part if u a have better suggention please make PR or MR
-            model = `prop_knife`,
+            model = 'prop_knife',
             pos = vec3(-0.04, -0.03, 0.02),
             rot = vec3(0.0, 0.0, -2.5) 
         },

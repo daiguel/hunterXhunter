@@ -5,8 +5,7 @@ local function spawnCar()
 	local hasMoney = lib.callback.await('hunterXhunter:removeMoney', false, renCost)
 	if hasMoney then
 		local pos = Config.rentalHunter.carSapwnCords
-		ESX.Game.SpawnVehicle('mesa3', pos, 278.2991, function(vehicle)
-			-- set the player ped into the vehicle's driver seat
+		ESX.Game.SpawnVehicle(Config.rentalHunter.car, pos, Config.rentalHunter.carSapwnCordsHeading, function(vehicle)
 			local plate = GetVehicleNumberPlateText(vehicle)
 			LocalPlayer.state.carRented = plate
 			SetPedIntoVehicle(PlayerPedId(), vehicle, -1)
@@ -21,8 +20,8 @@ local hunterOptions = {
         onSelect = function(data)
 			spawnCar()
         end,
-        icon = 'fa-solid fa-truck-moving',
-        label = 'rent car for, '..renCost..'$',
+        icon = TranslateCap('rental_menu_icon'),
+        label = TranslateCap('rent_car_for')..renCost..TranslateCap('coin'),
         distance = 2,
         canInteract = function(entity, coords, distance)
             return ((not IsPedDeadOrDying(PlayerPedId(), true))) and (not IsPedCuffed(PlayerPedId())) 
@@ -33,12 +32,11 @@ local hunterOptions = {
 local function createblip(coords, blipSprite, scale, color)
     local blip = AddBlipForCoord(coords)
     SetBlipSprite(blip, blipSprite)
-	-- SetBlipDisplay(blip, 4)
 	SetBlipScale(blip, scale)
 	SetBlipColour(blip, color)
 	SetBlipAsShortRange(blip, true)
 	BeginTextCommandSetBlipName('STRING')
-	AddTextComponentSubstringPlayerName('Rent Car For Hunt')
+	AddTextComponentSubstringPlayerName(Config.rentalHunter.blipName)
 	EndTextCommandSetBlipName(blip)
 end
 
@@ -138,7 +136,7 @@ local function setTakeBackCar()
 		if (self.currentDistance <= range) and (isCurrentCarRentedByThisPalyer) and (vehicle ~=0) then
 			if not MessageShown then
 				MessageShown = true
-				lib.showTextUI('[E] - To return vehicle', {
+				lib.showTextUI(TranslateCap('return_veh'), {
 					position = "bottom-center",
 					style = {
 						borderRadius = 30,
