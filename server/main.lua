@@ -108,7 +108,7 @@ end)
 
 RegisterNetEvent('hunterXhunter:signalIllegalHunting')
 AddEventHandler('hunterXhunter:signalIllegalHunting', function(coords)
-    local xPlayers = ESX.GetExtendedPlayers("job", "unemployed")
+    local xPlayers = ESX.GetExtendedPlayers("job", "police")
 	for _, xPlayer in pairs(xPlayers) do
         TriggerClientEvent('hunterXhunter:drawOutlaw', xPlayer.source, coords)
         Config.outlaw.signalfunc(source, coords, xPlayer.source)
