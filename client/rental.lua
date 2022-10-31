@@ -62,7 +62,6 @@ local function createRentalHunterPed()
 		print("No gender provided! Check your configuration!")
 	end	
 
-	--Check if someones coordinate grabber thingy needs to subract 1 from Z or not.
     local x, y, z = table.unpack(coords)
     local ped = CreatePed(genderNum, GetHashKey(model), x, y, z - 1, heading, false, true)
 	SetEntityAlpha(ped, 0, false)
@@ -113,7 +112,7 @@ end
 local function setTakeBackCar()
 
     local point = lib.points.new(Config.rentalHunter.carTakeBack, 30, { name = 'slaughterhouse'})
-	local player, carRentedByCurrentPlayer --this adds 0.02 ms ads in infite loop
+	local player, carRentedByCurrentPlayer --this adds 0.02 ms in loop
 
 	function point:onEnter()
 		carRentedByCurrentPlayer = LocalPlayer.state.carRented

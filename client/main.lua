@@ -207,7 +207,6 @@ local function animalPositionBasedOnVehicle(entity)
         zPos = 1.50
         yPos = -1.5
     end
-    print(zPos, yPos, animalType)
     return yPos, zPos
 end
 
@@ -324,8 +323,6 @@ local animalsOptions = {
             return IsPedDeadOrDying(entity, true) and carriying and (lastEntity==entity) and (canHuntOutSideLegalZone or insideLegalZone)
         end
     },
-
-
 }
 
 RegisterNetEvent('hunterXhunter:drawOutlaw')

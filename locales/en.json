@@ -34,8 +34,8 @@
   "collecting_horns"                    : "Collecting horns",
   "collecting_meat_and_leather"         : "Collecting meat and leather ",
   "already_slaughtered"                 : "Already slaughtered",
-  "you_cant_go_to_hunt_without_knife"   : "You can\"t go to hunt without knife :(",
-  "you_cant_slaughter_without_License"  : "You can\"t slaughter without License",
+  "you_cant_go_to_hunt_without_knife"   : "You can't go to hunt without knife :(",
+  "you_cant_slaughter_without_License"  : "You can't slaughter without License",
 
   "inventory_full"                      : "Inventory full",
   "added_x"                             : "Successfully added X",

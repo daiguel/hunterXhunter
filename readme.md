@@ -28,7 +28,7 @@
  - <a href="https://github.com/overextended/ox_lib">ox_lib</a>
  - <a href="https://github.com/overextended/ox_target">ox_target</a>
 
-# RASMON AT HIGHEST USAGE
+# RESMON AT HIGHEST USAGE
 ![alt text](https://i.imgur.com/wJfWxNK.png "perfs") 
 
 # 	OX_INVENTORY CONFIG

@@ -1,4 +1,5 @@
 local ox_inventory = exports.ox_inventory
+lib.locale()
 
 RegisterNetEvent('hunterXhunter:sellItem')
 AddEventHandler('hunterXhunter:sellItem', function(itemName, amount, price)
