@@ -18,7 +18,7 @@
   "sell_leather"                        : "Sell leather, ",
   "leather_per_unit"                    : "$ per unit",
   "items_sold"                          : "you have sold ",
-  "items_count"                          : "X of ",
+  "items_count"                         : "X of ",
 
   "icon_carry"                          : "fa-solid fa-cow",
   "carry"                               : "Carry",

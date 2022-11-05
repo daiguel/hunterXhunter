@@ -46,13 +46,10 @@ local function hasLicenses(identifier, source)
     end
     return hasLisence
 end
-
-RegisterNetEvent('hunterXhunter:slaughter')
-AddEventHandler('hunterXhunter:slaughter', function(animalNetId, entityType, hasCorns, amountOfMeatLeftToGive)
+lib.callback.register('hunterXhunter:slaughter', function(source, animalNetId, entityType, hasCorns, amountOfMeatLeftToGive)
     local _source = source
     local xPlayer = ESX.GetPlayerFromId(_source)
 	local identifier = xPlayer.getIdentifier() 
-    local cords = xPlayer.getCoords(true)
 
     local entity = NetworkGetEntityFromNetworkId(animalNetId)
     local hasLisence = hasLicenses(identifier, _source)
@@ -102,8 +99,9 @@ AddEventHandler('hunterXhunter:slaughter', function(animalNetId, entityType, has
             TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = locale('you_cant_go_to_hunt_without_knife')})
         end
     else
-        TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = locale('you_cant_go_to_hunt_without_knife')})
+        TriggerClientEvent('ox_lib:notify', _source, { type = 'error', description = locale('you_cant_slaughter_without_License')})
     end
+    return true
 end)
 
 RegisterNetEvent('hunterXhunter:signalIllegalHunting')

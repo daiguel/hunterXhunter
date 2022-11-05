@@ -48,6 +48,10 @@ local function setSlaughterHouse()
 		end
        
     end
+    
+    function slaughterHousePoint:onExit() -- when tp's out 
+        insideSlaughterhouseZone = false
+    end
 end
 
 local function setHuntingZone(areas)
@@ -91,6 +95,7 @@ local function loadanimdict(dictname)
 end
 
 local function slaughter(data)
+    carriying = true
     local hasHorns=false
     local animalType = getAnimalModel(data.entity)
     local netEntity = NetworkGetNetworkIdFromEntity(data.entity)
@@ -104,7 +109,8 @@ local function slaughter(data)
     if GetPedDrawableVariation(data.entity, 8)==1 then
         hasHorns = true
     end   
-    TriggerServerEvent('hunterXhunter:slaughter', netEntity, animalType, hasHorns, amountOfMeatLeftToGive)
+    local wait = lib.callback.await('hunterXhunter:slaughter', false, netEntity, animalType, hasHorns, amountOfMeatLeftToGive) --wait end of opertions
+    carriying = false
 end
 
 local function desableEnteringVehicle()
@@ -144,6 +150,7 @@ local function animalPositionBasedOnPed(entity)
 end
 
 local function carry(data)
+
     local entity = data.entity
     local vehicleId = GetEntityAttachedTo(entity) -- block to set vehicle to empty
     local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(entity))
@@ -285,7 +292,7 @@ local animalsOptions = {
         canInteract = function(entity, distance, coords, name, bone)
             local state = Entity(entity).state
             local isEntityCarried = state.carried
-            return IsPedDeadOrDying(entity, true) and (not carriying) and (not lastEntity) and (not isEntityCarried) and (canHuntOutSideLegalZone or insideLegalZone) and insideSlaughterhouseZone --GetPedType(entity) == 28  this is no longer needed
+            return IsPedDeadOrDying(entity, true) and (not carriying) and (not lastEntity) and (not isEntityCarried) and (canHuntOutSideLegalZone or insideLegalZone) and insideSlaughterhouseZone
         end
     },
     {

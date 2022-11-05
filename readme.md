@@ -13,6 +13,8 @@
 + rent a 4X4 vehicle to charge hunted animal on and take it to slaughterer, get redeemed when vehicle is returned 
 + sell your goods 
 + illegal hunting can be done everywhere in the map
++ player can not enter vehicle when carriying
++ if player dies while carriying, animal will fall 
 + used ox_inventory Store to purchase items needed for hunt
 
 # PREVIEW

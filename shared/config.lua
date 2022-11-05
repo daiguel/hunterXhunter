@@ -1,5 +1,4 @@
 Config = {}
-Config.Locale                     = 'en'
 
 Config.allowToHuntWithoutLicense = true
 Config.allowToSlaughterWithoutKnif = false
