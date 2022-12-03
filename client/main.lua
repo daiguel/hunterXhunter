@@ -192,37 +192,34 @@ local function drop(data)
     ClearPedSecondaryTask(PlayerPedId())
 end
 
-local function animalPositionBasedOnVehicle(entity)
+local function animalPositionBasedOnVehicle(entity, vehicleModel)
     local animalType =  getAnimalModel(entity)
-    local yPos, zPos
-    if animalType=="a_c_deer" or animalType=="a_c_cow" then
-        zPos = 2.40
-        yPos = -1.5
-    elseif  animalType=="a_c_boar" then
-        zPos = 1.90
-        yPos = -0.9
-    elseif  animalType=="a_c_coyote" then
-        zPos = 1.80
-        yPos = -1.8
-    elseif  animalType=="a_c_rabbit_01" then
-        zPos = 1.50
-        yPos = -1.5
-    elseif  animalType=="a_c_mtlion" then
-        zPos = 1.90
-        yPos = -1.8
-    else
-        zPos = 1.50
-        yPos = -1.5
-    end
-    return yPos, zPos
+
+    for vehModel, animalPos in pairs(Config.animalPositionBasedOnVehicle) do
+        if vehicleModel == GetHashKey(vehModel) then
+            for animal, pos in pairs(animalPos) do
+                if animal == animalType then 
+                    return pos.yPos, pos.zPos
+                end 
+            end
+        end
+    end 
 end
 
+local function isVehicleModelSupported(model)
+    for supportedModel, _ in pairs(Config.animalPositionBasedOnVehicle) do
+        if model == GetHashKey(supportedModel) then
+            return true
+        end
+    end
+end
 
 local function putOnRoof(data)
     local entity = data.entity
     local animalCoords = GetEntityCoords(entity)
     local vehicleId, vehicleCoords = lib.getClosestVehicle(animalCoords, 4, true)
-    if GetHashKey("mesa3")==GetEntityModel(vehicleId) then
+    local vehModel = GetEntityModel(vehicleId)
+    if isVehicleModelSupported(vehModel) then
         if vehicleId then
             local state = Entity(vehicleId).state
             local isVehicleFull = state.full
@@ -234,7 +231,7 @@ local function putOnRoof(data)
                 DetachEntity(entity, true, true)
                 ClearPedSecondaryTask(PlayerPedId())
                 ClearPedSecondaryTask(entity) --TODO add animation to animal
-                local  yPos, zPos = animalPositionBasedOnVehicle(entity)
+                local  yPos, zPos = animalPositionBasedOnVehicle(entity, vehModel)
                 AttachEntityToEntity(entity, vehicleId, 0, 0.0, yPos, zPos, 0.0, 0.5, 270.0, false, false, false, false, 2, true)
                 SetEntityCollision(entity, true, false) 
             else

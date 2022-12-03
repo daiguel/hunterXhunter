@@ -93,3 +93,22 @@ Config.outlaw = {
     blipScale = 0.9,
     drawBlipTimeout = 100000,
 }
+
+Config.animalPositionBasedOnVehicle = {
+    mesa3 = {
+        a_c_deer={ zPos = 2.40, yPos = -1.5 },
+        a_c_cow={ zPos = 2.40, yPos = -1.5 }, 
+        a_c_boar={ zPos = 1.90, yPos = -0.9 }, 
+        a_c_coyote={ zPos = 1.80, yPos = -1.8 }, 
+        a_c_rabbit_01={ zPos = 1.50, yPos = -1.5 },
+        a_c_mtlion={ zPos = 1.90, yPos = -1.8 },
+        },
+    mesa = {
+        a_c_deer={ zPos = 2.40, yPos = -1.5 },
+        a_c_cow={ zPos = 2.40, yPos = -1.5 }, 
+        a_c_boar={ zPos = 1.90, yPos = -0.9 }, 
+        a_c_coyote={ zPos = 1.80, yPos = -1.8 }, 
+        a_c_rabbit_01={ zPos = 1.50, yPos = -1.5 },
+        a_c_mtlion={ zPos = 1.90, yPos = -1.8 },
+        }
+}
