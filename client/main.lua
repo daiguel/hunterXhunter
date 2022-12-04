@@ -158,29 +158,48 @@ local function carry(data)
     if vehicleId then
         TriggerServerEvent('hunterXhunter:setVehicleState', NetworkGetNetworkIdFromEntity(vehicleId), nil) --set vehicle empty
     end
-    carriying = true
-    desableEnteringVehicle()
-    DetachEntity(entity, true, true)-- when attached to vehicle
     local cords = GetEntityCoords(entity)
     local heading = GetEntityHeading(entity)
     local x, y, z = table.unpack(cords)
     local clone = ClonePed(entity, true, false, true)
     lastEntity = clone
-    TriggerServerEvent("hunterXhunter:removeOldEntity", NetworkGetNetworkIdFromEntity(entity)) -- delete old animal that freezes
-    
-    TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(clone), true) 
-    TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(clone), amountOfMeatLeftToGive) --copy amount of meat to clone
-    
-    SetEntityCoords(clone, x, y, z, false, false, true, false)
-    SetEntityHeading(clone, heading)
+    local animlCarried = lib.callback.await('hunterXhunter:removeOldEntity', false, NetworkGetNetworkIdFromEntity(entity))
+    if animlCarried then
+        DeleteEntity(clone)
+        lib.notify({
+            id = 'animal_carried',
+            title = 'ERROR',
+            description = locale('animal_carried'), 
+            position = 'top',
+            style = {
+                backgroundColor = '#141517',
+                color = '#909296'
+            },
+            icon = 'ban',
+            iconColor = '#C53030'
+        })
+    else
+        carriying = true
+        desableEnteringVehicle()
+        DetachEntity(entity, true, true)-- when attached to vehicle
+        --TriggerServerEvent("hunterXhunter:removeOldEntity", NetworkGetNetworkIdFromEntity(entity)) -- delete old animal that freezes
+        
+        TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(clone), true) 
+        TriggerServerEvent('hunterXhunter:setAmountOfMeat', NetworkGetNetworkIdFromEntity(clone), amountOfMeatLeftToGive) --copy amount of meat to clone
+        
+        SetEntityCoords(clone, x, y, z, false, false, true, false)
+        SetEntityHeading(clone, heading)
 
-    local zPos , xPos = animalPositionBasedOnPed(clone)
-    
-    AttachEntityToEntity(clone, PlayerPedId(), 0, xPos, 0.0, zPos, 0.5, 0.5, 0.0, false, false, false, false, 2, true) -- z=0.63 
-    SetEntityCollision(clone, true, false)
+        local zPos , xPos = animalPositionBasedOnPed(clone)
+        
+        AttachEntityToEntity(clone, PlayerPedId(), 0, xPos, 0.0, zPos, 0.5, 0.5, 0.0, false, false, false, false, 2, true) -- z=0.63 
+        SetEntityCollision(clone, true, false)
 
-    loadanimdict('missfinale_c2mcs_1')
-    TaskPlayAnim(PlayerPedId(), 'missfinale_c2mcs_1', 'fin_c2_mcs_1_camman', 8.0, -8.0, 100000, 49, 0, false, false, false)
+        loadanimdict('missfinale_c2mcs_1')
+        TaskPlayAnim(PlayerPedId(), 'missfinale_c2mcs_1', 'fin_c2_mcs_1_camman', 8.0, -8.0, 100000, 49, 0, false, false, false)
+
+    end
+    
 end
 
 local function drop(data)

@@ -21,6 +21,7 @@
   "items_count"                         : "X of ",
 
   "icon_carry"                          : "fa-solid fa-cow",
+  "animal_carried"                      : "Already carried by someone else",
   "carry"                               : "Carry",
   "icon_drop"                           : "fa-solid fa-arrow-down",
   "drop"                                : "Drop",

@@ -114,12 +114,21 @@ AddEventHandler('hunterXhunter:signalIllegalHunting', function(coords)
     
 end)
 
-RegisterNetEvent('hunterXhunter:removeOldEntity')
-AddEventHandler('hunterXhunter:removeOldEntity', function(prevAnimalNedId)
+-- RegisterNetEvent('hunterXhunter:removeOldEntity')
+-- AddEventHandler('hunterXhunter:removeOldEntity', function(prevAnimalNedId)
+--     local prevAnimal = NetworkGetEntityFromNetworkId(prevAnimalNedId) --delete original entity, clone to replace 
+--     if DoesEntityExist(prevAnimal) then
+--         DeleteEntity(prevAnimal)
+--     end
+-- end)
+
+lib.callback.register('hunterXhunter:removeOldEntity', function(source, prevAnimalNedId)
     local prevAnimal = NetworkGetEntityFromNetworkId(prevAnimalNedId) --delete original entity, clone to replace 
     if DoesEntityExist(prevAnimal) then
         DeleteEntity(prevAnimal)
+        return false
     end
+    return true
 end)
 
 RegisterNetEvent('hunterXhunter:setAmountOfMeat')
@@ -137,6 +146,12 @@ RegisterNetEvent('hunterXhunter:setAnimalCarried')
 AddEventHandler('hunterXhunter:setAnimalCarried', function(animlaNetId, status)
     local animal = NetworkGetEntityFromNetworkId(animlaNetId)
     Entity(animal).state.carried = status
+end)
+
+RegisterNetEvent('hunterXhunter:isAnimalCarried')
+AddEventHandler('hunterXhunter:isAnimalCarried', function(animlaNetId)
+    local animal = NetworkGetEntityFromNetworkId(animlaNetId)
+    return Entity(animal).state.carried
 end)
 
 RegisterNetEvent('hunterXhunter:setVehicleState')
