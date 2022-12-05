@@ -130,14 +130,19 @@ lib.callback.register('hunterXhunter:canCarry', function(source, animalNetID)
         end
     end
     table.insert(animalsCarriedNetIDs, animalNetID)
-    local index= #animalsCarriedNetIDs
-    print(index)
-    print(json.encode(animalsCarriedNetIDs, {indent=true}))
+    
     SetTimeout(2, function() 
-        table.remove(animalsCarriedNetIDs, index)
-        print(json.encode(animalsCarriedNetIDs, {indent=true}))
+        local index = nil
+        for k, v in pairs(animalsCarriedNetIDs) do 
+            if v == animalNetID then 
+                index = k 
+            end
+        end
+        if index ~= nil then
+            table.remove(animalsCarriedNetIDs, index)
+        end
     end)
-    print("tototo finished")
+    
     return true
 end)
 
