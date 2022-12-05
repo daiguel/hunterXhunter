@@ -150,22 +150,9 @@ local function animalPositionBasedOnPed(entity)
 end
 
 local function carry(data)
-
     local entity = data.entity
-    local vehicleId = GetEntityAttachedTo(entity) -- block to set vehicle to empty
-    local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(entity))
-
-    if vehicleId then
-        TriggerServerEvent('hunterXhunter:setVehicleState', NetworkGetNetworkIdFromEntity(vehicleId), nil) --set vehicle empty
-    end
-    local cords = GetEntityCoords(entity)
-    local heading = GetEntityHeading(entity)
-    local x, y, z = table.unpack(cords)
-    local clone = ClonePed(entity, true, false, true)
-    lastEntity = clone
-    local animlCarried = lib.callback.await('hunterXhunter:removeOldEntity', false, NetworkGetNetworkIdFromEntity(entity))
-    if animlCarried then
-        DeleteEntity(clone)
+    local canCarry = lib.callback.await('hunterXhunter:canCarry', false, NetworkGetNetworkIdFromEntity(entity))
+    if not canCarry then
         lib.notify({
             id = 'animal_carried',
             title = 'ERROR',
@@ -179,6 +166,20 @@ local function carry(data)
             iconColor = '#C53030'
         })
     else
+        local cords = GetEntityCoords(entity)
+        local heading = GetEntityHeading(entity)
+        local x, y, z = table.unpack(cords)
+        local clone = ClonePed(entity, true, false, true)
+        lastEntity = clone
+        TriggerServerEvent("hunterXhunter:setAnimalCarried", NetworkGetNetworkIdFromEntity(clone), true) 
+        TriggerServerEvent("hunterXhunter:removeOldEntity", NetworkGetNetworkIdFromEntity(entity)) 
+        DeleteEntity(entity)
+        local vehicleId = GetEntityAttachedTo(entity) -- maybe this is no longer needed bacause animal gets deleted 
+        if vehicleId then
+            TriggerServerEvent('hunterXhunter:setVehicleState', NetworkGetNetworkIdFromEntity(vehicleId), nil) --set vehicle empty
+        end
+
+        local amountOfMeatLeftToGive = lib.callback.await('hunterXhunter:getAmountOfMeat', false, NetworkGetNetworkIdFromEntity(entity))
         carriying = true
         desableEnteringVehicle()
         DetachEntity(entity, true, true)-- when attached to vehicle

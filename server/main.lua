@@ -1,5 +1,5 @@
 local ox_inventory = exports.ox_inventory
-
+local animalsCarriedNetIDs = {}
 local function canCarry(_source, itemName, amount)
     local amountToAdd = ox_inventory:CanCarryAmount(_source, itemName)
     if (amountToAdd < amount) and (amountToAdd > 0) then
@@ -46,6 +46,7 @@ local function hasLicenses(identifier, source)
     end
     return hasLisence
 end
+
 lib.callback.register('hunterXhunter:slaughter', function(source, animalNetId, entityType, hasCorns, amountOfMeatLeftToGive)
     local _source = source
     local xPlayer = ESX.GetPlayerFromId(_source)
@@ -114,20 +115,29 @@ AddEventHandler('hunterXhunter:signalIllegalHunting', function(coords)
     
 end)
 
--- RegisterNetEvent('hunterXhunter:removeOldEntity')
--- AddEventHandler('hunterXhunter:removeOldEntity', function(prevAnimalNedId)
---     local prevAnimal = NetworkGetEntityFromNetworkId(prevAnimalNedId) --delete original entity, clone to replace 
---     if DoesEntityExist(prevAnimal) then
---         DeleteEntity(prevAnimal)
---     end
--- end)
-
-lib.callback.register('hunterXhunter:removeOldEntity', function(source, prevAnimalNedId)
-    local prevAnimal = NetworkGetEntityFromNetworkId(prevAnimalNedId) --delete original entity, clone to replace 
+RegisterNetEvent('hunterXhunter:removeOldEntity')
+AddEventHandler('hunterXhunter:removeOldEntity', function(animalNetID)
+    local prevAnimal = NetworkGetEntityFromNetworkId(animalNetID) --delete original entity, clone to replace 
     if DoesEntityExist(prevAnimal) then
         DeleteEntity(prevAnimal)
-        return false
     end
+end)
+
+lib.callback.register('hunterXhunter:canCarry', function(source, animalNetID)
+    for _, v in pairs(animalsCarriedNetIDs) do 
+        if v == animalNetID then 
+            return false
+        end
+    end
+    table.insert(animalsCarriedNetIDs, animalNetID)
+    local index= #animalsCarriedNetIDs
+    print(index)
+    print(json.encode(animalsCarriedNetIDs, {indent=true}))
+    SetTimeout(2, function() 
+        table.remove(animalsCarriedNetIDs, index)
+        print(json.encode(animalsCarriedNetIDs, {indent=true}))
+    end)
+    print("tototo finished")
     return true
 end)
 
