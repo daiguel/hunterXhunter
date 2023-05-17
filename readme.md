@@ -24,7 +24,7 @@
 + drag and drop
 
 # DEPENDCIES
- - <a href="https://github.com/ESX-Org/es_extended">es_extended</a>
+ - <a href="https://github.com/ESX-Org/es_extended">es_extended <= 1.8 </a>
  - <a href="https://github.com/ESX-Org/esx_license">esx_license</a> 
  - <a href="https://github.com/overextended/ox_inventory">ox_inventory</a>
  - <a href="https://github.com/overextended/ox_lib">ox_lib</a>
